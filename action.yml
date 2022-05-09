@@ -1,0 +1,9 @@
+name: 'Aller Sweden Labrador GitHub Action'
+description: 'Disables manual merge for PRs in Labrador repo'
+inputs:
+  GITHUB_TOKEN: 
+    description: 'GitHub Token'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
