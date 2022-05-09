@@ -7,7 +7,7 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
-await octokit.issues.createComment({
+octokit.issues.createComment({
   ...context.repo,
   issue_number: pull_request.number,
   body: 'Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.'
