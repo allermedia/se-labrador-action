@@ -7,6 +7,8 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
+console.log(context.repo);
+
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
     ...context.repo,
@@ -17,7 +19,8 @@ async function createInfoComment() {
 
 async function createCommitStatus() {
   await octokit.rest.repos.createCommitStatus({
-    ...context.repo,
+    owner: 'allermedia',
+    repo: 'se-copycat',
     sha: context.sha,
     state: 'pending'
   });  
