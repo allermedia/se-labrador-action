@@ -7,7 +7,7 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
-console.log(context);
+console.log(context); 
 
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
