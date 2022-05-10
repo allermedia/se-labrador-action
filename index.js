@@ -21,7 +21,7 @@ async function createCommitStatus() {
   await octokit.rest.repos.createCommitStatus({
     owner: 'allermedia',
     repo: 'se-copycat',
-    sha: context.sha,
+    sha: context.head.sha,
     state: 'pending'
   });  
 }
