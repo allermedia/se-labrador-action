@@ -19,7 +19,7 @@ async function createCommitStatus() {
   await octokit.rest.repos.createCommitStatus({
     ...context.repo,
     sha: context.sha,
-    state: 'Pending'
+    state: 'pending'
   });  
 }
 
