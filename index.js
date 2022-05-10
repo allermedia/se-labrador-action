@@ -14,5 +14,5 @@ async function run() {
     body: 'Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.'
   });  
 }
-
+ 
 run();
