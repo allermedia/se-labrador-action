@@ -2,12 +2,11 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
+const workflowAction = core.getInput('WORKFLOW_ACTION');
 const octokit = github.getOctokit(GITHUB_TOKEN);
 
 const { context = {} } = github;
 const { pull_request } = context.payload;
-
-console.log(pull_request);
 
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
@@ -25,5 +24,15 @@ async function createCommitStatus() {
   });  
 }
 
-createCommitStatus(); 
-createInfoComment();
+if (workflowAction === 'prinit') {
+  createCommitStatus(); 
+  createInfoComment();
+}
+
+if (workflowAction === 'merge-it') {
+  console.log('merge-it');
+}
+
+if (workflowAction === 'merge-now') {
+  console.log('merge-now');
+}

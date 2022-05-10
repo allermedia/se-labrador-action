@@ -4,6 +4,9 @@ inputs:
   GITHUB_TOKEN: 
     description: 'GitHub Token'
     required: true
+  WORKFLOW_ACTION:
+    description: 'What the action should do'
+    required: true
 runs:
   using: 'node16'
   main: 'index.js' 
