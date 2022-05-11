@@ -34,7 +34,7 @@ async function mergePullRequest() {
 }
 
 if (workflowAction === 'prinit') {
-  createCommitStatus(pull_request.head.sha, 'failed'); 
+  createCommitStatus(pull_request.head.sha, 'failure'); 
   createInfoComment();
 }
 
