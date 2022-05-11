@@ -33,6 +33,13 @@ async function mergePullRequest() {
   });  
 }
 
+async function getPullRequest(prNumber) {
+  return await octokit.rest.pulls.get({
+    ...context.repo,
+    pull_number: prNumber,
+  });
+}
+
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'failure'); 
   createInfoComment();
@@ -40,10 +47,7 @@ if (workflowAction === 'prinit') {
 
 if (workflowAction === 'merge-it') {
   console.log(github.context.payload);
-  const pr = octokit.rest.pulls.get({
-    ...context.repo,
-    pull_number: github.context.payload.issue.number,
-  });
+  const pr = getPullRequest(github.context.payload.issue.number);
   console.log(pr);
 }
 
