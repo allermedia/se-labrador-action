@@ -28,7 +28,7 @@ async function mergePullRequest() {
   await octokit.rest.repos.merge({
     ...context.repo,
     base: 'master',
-    head: pull_request.branches[0].name,
+    head: github.context.payload.branches[0].name,
     commit_message: 'Automatically merged by GitHub Actions',
   });  
 }
