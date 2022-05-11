@@ -49,7 +49,7 @@ if (workflowAction === 'merge-it') {
   console.log(github.context.payload);
   const pr = getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
-    console.log(pr);
+    createCommitStatus(pr.data.head.sha, 'success'); 
   });
 }
 
@@ -58,6 +58,6 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
-  createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
+  //createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
   mergePullRequest();
 }
