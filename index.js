@@ -40,6 +40,11 @@ if (workflowAction === 'prinit') {
 
 if (workflowAction === 'merge-it') {
   console.log(github.context.payload);
+  const pr = octokit.rest.pulls.get({
+    ...context.repo,
+    pull_number: github.context.payload.issue.number,
+  });
+  console.log(pr);
 }
 
 if (workflowAction === 'merge-now') {
