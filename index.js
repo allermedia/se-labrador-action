@@ -39,7 +39,7 @@ if (workflowAction === 'prinit') {
 }
 
 if (workflowAction === 'merge-it') {
-  console.log('merge-it');
+  console.log(pull_request);
 }
 
 if (workflowAction === 'merge-now') {
