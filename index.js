@@ -23,13 +23,16 @@ async function createCommitStatus() {
     state: 'pending',
   });  
 }
-/*
+
 async function mergePullRequest() {
-  await octokit.rest.pulls.merge({
+  await octokit.rest.repos.merge({
     ...context.repo,
-    pull_number: pull_request.number,
+    base: 'master',
+    head: pull_request.branches[0].name,
+    commit_message: 'Automatically merged by GitHub Actions',
   });  
-}*/
+}
+
 if (workflowAction === 'prinit') {
   createCommitStatus(); 
   createInfoComment();
@@ -44,5 +47,5 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
-  console.log(JSON.stringify(github));
+  mergePullRequest();
 }
