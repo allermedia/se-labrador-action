@@ -23,14 +23,13 @@ async function createCommitStatus() {
     state: 'pending',
   });  
 }
-
+/*
 async function mergePullRequest() {
   await octokit.rest.pulls.merge({
     ...context.repo,
     pull_number: pull_request.number,
   });  
-}
-
+}*/
 if (workflowAction === 'prinit') {
   createCommitStatus(); 
   createInfoComment();
@@ -45,5 +44,5 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
-  mergePullRequest();
+  console.log(github);
 }
