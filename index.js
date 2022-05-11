@@ -12,7 +12,7 @@ async function createInfoComment() {
   await octokit.rest.issues.createComment({
     ...context.repo,
     issue_number: pull_request.number,
-    body: 'Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.'
+    body: 'Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.',
   });  
 }
 
@@ -20,7 +20,14 @@ async function createCommitStatus() {
   await octokit.rest.repos.createCommitStatus({
     ...context.repo,
     sha: pull_request.head.sha,
-    state: 'pending'
+    state: 'pending',
+  });  
+}
+
+async function mergePullRequest() {
+  await octokit.rest.pulls.merge({
+    ...context.repo,
+    pull_number: pull_request.number,
   });  
 }
 
@@ -35,4 +42,8 @@ if (workflowAction === 'merge-it') {
 
 if (workflowAction === 'merge-now') {
   console.log('merge-now');
+}
+
+if (workflowAction === 'merge-pr') {
+  mergePullRequest();
 }
