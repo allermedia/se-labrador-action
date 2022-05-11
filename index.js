@@ -44,5 +44,5 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
-  console.log(github);
+  console.log(JSON.stringify(github));
 }
