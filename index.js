@@ -39,7 +39,7 @@ if (workflowAction === 'prinit') {
 }
 
 if (workflowAction === 'merge-it') {
-  console.log(pull_request);
+  console.log(github.context.payload);
 }
 
 if (workflowAction === 'merge-now') {
