@@ -16,11 +16,11 @@ async function createInfoComment() {
   });  
 }
 
-async function createCommitStatus() {
+async function createCommitStatus(sha, commitStatus) {
   await octokit.rest.repos.createCommitStatus({
     ...context.repo,
-    sha: pull_request.head.sha,
-    state: 'pending',
+    sha: sha,
+    state: commitStatus,
   });  
 }
 
@@ -34,7 +34,7 @@ async function mergePullRequest() {
 }
 
 if (workflowAction === 'prinit') {
-  createCommitStatus(); 
+  createCommitStatus(pull_request.head.sha, 'pending'); 
   createInfoComment();
 }
 
@@ -47,5 +47,6 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
+  createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
   mergePullRequest();
 }
