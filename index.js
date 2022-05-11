@@ -47,8 +47,10 @@ if (workflowAction === 'prinit') {
 
 if (workflowAction === 'merge-it') {
   console.log(github.context.payload);
-  const pr = getPullRequest(github.context.payload.issue.number);
-  console.log(pr);
+  const pr = getPullRequest(github.context.payload.issue.number)
+  .then((pr) => {
+    console.log(pr);
+  });
 }
 
 if (workflowAction === 'merge-now') {
