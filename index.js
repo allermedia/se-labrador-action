@@ -24,11 +24,11 @@ async function createCommitStatus(sha, commitStatus) {
   });  
 }
 
-async function mergePullRequest() {
+async function mergePullRequest(head) {
   await octokit.rest.repos.merge({
     ...context.repo,
     base: 'master',
-    head: github.context.payload.branches[0].name,
+    head: head,
     commit_message: 'Automatically merged by GitHub Actions',
   });  
 }
@@ -41,7 +41,7 @@ async function getPullRequest(prNumber) {
 }
 
 if (workflowAction === 'prinit') {
-  createCommitStatus(pull_request.head.sha, 'failure'); 
+  createCommitStatus(pull_request.head.sha, 'pending'); 
   createInfoComment();
 }
 
@@ -54,10 +54,14 @@ if (workflowAction === 'merge-it') {
 }
 
 if (workflowAction === 'merge-now') {
-  console.log('merge-now');
+  const pr = getPullRequest(github.context.payload.issue.number)
+  .then((pr) => {
+    createCommitStatus(pr.data.head.sha, 'success');
+    mergePullRequest(pr.data.head.ref);
+  });
 }
 
 if (workflowAction === 'merge-pr') {
   //createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
-  mergePullRequest();
+  mergePullRequest(github.context.payload.branches[0].name);
 }
