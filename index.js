@@ -31,6 +31,7 @@ async function createTriggerCommit(branchName, prSha) {
     ...context.repo,
     message: `Branch: ${branchName}, PR: ${prSha}`,
     tree: triggerCommitSha,
+    parents: ['c2a20ce6522c248619700376372354221633e46c'],
     author: {
       name: 'GitHub',
       email: 'noreply@github.com',
