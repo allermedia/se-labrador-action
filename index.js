@@ -8,7 +8,7 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
-const triggerCommitSha = 'c2a20ce6522c248619700376372354221633e46c';
+const triggerCommitSha = '294db24e486c72904c036f7a40b8e84971572d25';
 
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
