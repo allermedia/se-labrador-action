@@ -27,7 +27,7 @@ async function createCommitStatus(sha, commitStatus) {
 }
 
 async function createTriggerCommit(branchName, prSha) {
-  await octokit.rest.git.createCommit({
+  return await octokit.rest.git.createCommit({
     ...context.repo,
     message: `Branch: ${branchName}, PR: ${prSha}`,
     tree: triggerCommitSha,
@@ -61,10 +61,13 @@ if (workflowAction === 'prinit') {
 }
 
 if (workflowAction === 'merge-it') {
-  console.log(github.context.payload);
+  //console.log(github.context.payload);
   const pr = getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
-    createTriggerCommit(pr.data.head.ref, pr.data.head.sha);
+    createTriggerCommit(pr.data.head.ref, pr.data.head.sha)
+    .then((response) => {
+      console.log(response);
+    });
   });
 }
 
