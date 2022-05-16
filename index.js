@@ -8,6 +8,8 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
+const triggerCommitSha = 'c2a20ce6522c248619700376372354221633e46c';
+
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
     ...context.repo,
@@ -22,6 +24,18 @@ async function createCommitStatus(sha, commitStatus) {
     sha: sha,
     state: commitStatus,
   });  
+}
+
+async function createTriggerCommit(branchName, prSha) {
+  await octokit.rest.git.createCommit({
+    ...context.repo,
+    message: `Branch: ${branchName}, PR: ${prSha}`,
+    triggerCommitSha,
+    author: {
+      name: 'GitHub',
+      email: 'noreply@github.com',
+    },
+  })
 }
 
 async function mergePullRequest(head) {
@@ -49,7 +63,7 @@ if (workflowAction === 'merge-it') {
   console.log(github.context.payload);
   const pr = getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
-    createCommitStatus(pr.data.head.sha, 'success'); 
+    createTriggerCommit(pr.data.head.ref, pr.data.head.sha);
   });
 }
 
