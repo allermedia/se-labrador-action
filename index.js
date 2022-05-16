@@ -55,6 +55,14 @@ async function getPullRequest(prNumber) {
   });
 }
 
+async function updateBranchRef(commitSha) {
+  await octokit.git.updateRef({
+    ...context.repo,
+    ref: `heads/live`,
+    sha: commitSha,
+  });
+}
+
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'pending'); 
   createInfoComment();
@@ -67,6 +75,7 @@ if (workflowAction === 'merge-it') {
     createTriggerCommit(pr.data.head.ref, pr.data.head.sha)
     .then((response) => {
       console.log(response);
+      updateBranchRef(response.data.sha);
     });
   });
 }
