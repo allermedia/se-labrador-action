@@ -30,7 +30,7 @@ async function createTriggerCommit(branchName, prSha) {
   await octokit.rest.git.createCommit({
     ...context.repo,
     message: `Branch: ${branchName}, PR: ${prSha}`,
-    triggerCommitSha,
+    tree: triggerCommitSha,
     author: {
       name: 'GitHub',
       email: 'noreply@github.com',
