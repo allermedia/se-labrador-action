@@ -56,7 +56,7 @@ async function getPullRequest(prNumber) {
 }
 
 async function updateBranchRef(commitSha) {
-  await octokit.git.updateRef({
+  await octokit.rest.git.updateRef({
     ...context.repo,
     ref: `heads/live`,
     sha: commitSha,
