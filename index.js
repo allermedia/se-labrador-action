@@ -3,12 +3,11 @@ const github = require('@actions/github');
 
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const workflowAction = core.getInput('WORKFLOW_ACTION');
+const triggerBranch = core.getInput('TRIGGER_BRANCH');
 const octokit = github.getOctokit(GITHUB_TOKEN);
 
 const { context = {} } = github;
 const { pull_request } = context.payload;
-
-const triggerCommitSha = '294db24e486c72904c036f7a40b8e84971572d25';
 
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
@@ -26,12 +25,24 @@ async function createCommitStatus(sha, commitStatus) {
   });  
 }
 
-async function createTriggerCommit(branchName, prSha) {
+async function getBranchRef(branchName) {
+  return await octokit.rest.git.getRef({
+    ...context.repo,
+    ref: `heads/${branchName}`,
+  });
+}
+
+async function getCurrentCommit(sha) {
+  return await octokit.rest.git.getCommit({
+    ...context.repo,
+    commit_sha: sha,
+  });
+}
+async function createTriggerCommit(branchName, prSha, tree) {
   return await octokit.rest.git.createCommit({
     ...context.repo,
     message: `Branch: ${branchName}, PR: ${prSha}`,
-    tree: triggerCommitSha,
-    parents: ['c2a20ce6522c248619700376372354221633e46c'],
+    tree: tree,
     author: {
       name: 'GitHub',
       email: 'noreply@github.com',
@@ -58,7 +69,7 @@ async function getPullRequest(prNumber) {
 async function updateBranchRef(commitSha) {
   await octokit.rest.git.updateRef({
     ...context.repo,
-    ref: `heads/live`,
+    ref: `heads/${triggerBranch}`,
     sha: commitSha,
     force: true,
   });
@@ -71,12 +82,18 @@ if (workflowAction === 'prinit') {
 
 if (workflowAction === 'merge-it') {
   //console.log(github.context.payload);
-  const pr = getPullRequest(github.context.payload.issue.number)
+  getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
-    createTriggerCommit(pr.data.head.ref, pr.data.head.sha)
-    .then((response) => {
-      console.log(response);
-      updateBranchRef(response.data.sha);
+    getBranchRef(triggerBranch)
+    .then((branch) => {
+      getCurrentCommit(branch.data.object.sha)
+      .then((currentCommit) => {
+        createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha)
+        .then((newCommit) => {
+          console.log(newCommit);
+          updateBranchRef(newCommit.data.sha);
+        });
+      });
     });
   });
 }
