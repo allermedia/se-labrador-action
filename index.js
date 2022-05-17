@@ -38,11 +38,12 @@ async function getCurrentCommit(sha) {
     commit_sha: sha,
   });
 }
-async function createTriggerCommit(branchName, prSha, tree) {
+async function createTriggerCommit(branchName, prSha, tree, parents) {
   return await octokit.rest.git.createCommit({
     ...context.repo,
     message: `Branch: ${branchName}, PR: ${prSha}`,
     tree: tree,
+    parents: [parents],
     author: {
       name: 'GitHub',
       email: 'noreply@github.com',
@@ -90,7 +91,7 @@ if (workflowAction === 'merge-it') {
       getCurrentCommit(branch.data.object.sha)
       .then((currentCommit) => {
         console.log(JSON.stringify(currentCommit));
-        createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha)
+        createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha, branch.data.object.sha)
         .then((newCommit) => {
           //console.log(newCommit);
           updateBranchRef(newCommit.data.sha);
