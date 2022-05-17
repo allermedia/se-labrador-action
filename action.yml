@@ -8,8 +8,8 @@ inputs:
     description: 'What the action should do'
     required: true
   TRIGGER_BRANCH:
-  description: 'Which branch will trigger CodePipeline'
-  required: true
+    description: 'Which branch will trigger CodePipeline'
+    required: true
 runs:
   using: 'node16'
   main: 'index.js' 
