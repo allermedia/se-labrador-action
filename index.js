@@ -88,9 +88,10 @@ if (workflowAction === 'merge-it') {
     .then((branch) => {
       getCurrentCommit(branch.data.object.sha)
       .then((currentCommit) => {
+        console.log(currentCommit);
         createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha)
         .then((newCommit) => {
-          console.log(newCommit);
+          //console.log(newCommit);
           updateBranchRef(newCommit.data.sha);
         });
       });
