@@ -60,6 +60,7 @@ async function updateBranchRef(commitSha) {
     ...context.repo,
     ref: `heads/live`,
     sha: commitSha,
+    force: true,
   });
 }
 
