@@ -9,6 +9,24 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
+async function triggerPipeline(pr) {
+  const query = `query {
+    repository(owner: "${context.repo.owner}", name: "${context.repo.name}") {
+      pullRequest(number: ${pr.data.number}) {
+        merged
+        state
+				mergeable
+				reviewDecision
+      }
+    }
+  }`;
+  await octokit.graphql(query, ...context.repo)
+  .then((mergingInfo) => {
+    console.log(mergingInfo);
+  });
+}
+
+
 async function createInfoComment() {
   await octokit.rest.issues.createComment({
     ...context.repo,
@@ -90,12 +108,15 @@ if (workflowAction === 'merge-it') {
       console.log(JSON.stringify(branch.data));
       getCurrentCommit(branch.data.object.sha)
       .then((currentCommit) => {
-        console.log(JSON.stringify(currentCommit));
+        triggerPipeline(pr);
+       // console.log(JSON.stringify(currentCommit));
+       /*
         createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha, branch.data.object.sha)
         .then((newCommit) => {
           //console.log(newCommit);
           updateBranchRef(newCommit.data.sha);
         });
+      */
       });
     });
   });
