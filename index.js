@@ -20,7 +20,8 @@ async function triggerPipeline(pr) {
       }
     }
   }`;
-  await octokit.graphql(query, ...context.repo)
+  console.log(context.repo);
+  await octokit.graphql(query, context.repo)
   .then((mergingInfo) => {
     console.log(mergingInfo);
   });
