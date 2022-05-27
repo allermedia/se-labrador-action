@@ -17,22 +17,60 @@ async function triggerPipeline(pr) {
         state
 				mergeable
 				reviewDecision
+        commits(last:1){
+          nodes{
+            commit{
+              status{
+                state
+              }
+            }
+          }
+        }
       }
     }
   }`;
-  console.log(context.repo);
   await octokit.graphql(query, context.repo)
   .then((mergingInfo) => {
-    console.log(mergingInfo);
+    const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
+    const { mergeable_state, mergeable } = pr.data;
+    let prStatus = 'PENDING';
+    if (commits?.nodes && commits?.nodes.length) {
+      prStatus = commits.nodes[0]?.commit?.status?.state || 'PENDING';
+    }
+
+    if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
+      // Pull request should be ready for merge, lets trigger the pipeline and run the tests
+      createInfoComment('Testing CodePipeline in AWS is now triggered. If successful, your PR will be merged in a while.');
+    } else {
+      // Pull request is not suitable for merging, because one or many reasons. Lets create comments with the reason(s)
+      if (merged) {
+        createInfoComment('Ooops, you are ahead of yourself. This PR is already merged.');
+      }
+      if (mergeable_state === 'behind') {
+        createInfoComment('This branch is out-of-date with the base branch. Merge the latest changes from master into this branch before requesting a merge.');
+      }
+      if (mergeable_state === 'dirty') {
+        createInfoComment('There are conflicts you need to resolve before requesting a merge.');
+      }
+      if (state !== 'OPEN') {
+        createInfoComment('This PR is NOT in OPEN state, which is required to be able to merge.');
+      }
+      if (reviewDecision !== 'APPROVED') {
+        createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.');
+      }
+      if (prStatus === 'FAILURE') {
+        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch');
+      }
+    }
   });
 }
 
 
-async function createInfoComment() {
+async function createInfoComment(commentText) {
   await octokit.rest.issues.createComment({
     ...context.repo,
     issue_number: pull_request.number,
-    body: 'Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.',
+    body: commentText,
   });  
 }
 
@@ -97,7 +135,7 @@ async function updateBranchRef(commitSha) {
 
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'pending'); 
-  createInfoComment();
+  createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.');
 }
 
 if (workflowAction === 'merge-it') {
