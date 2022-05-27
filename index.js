@@ -40,36 +40,36 @@ async function triggerPipeline(pr) {
 
     if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
       // Pull request should be ready for merge, lets trigger the pipeline and run the tests
-      createInfoComment('Testing CodePipeline in AWS is now triggered. If successful, your PR will be merged in a while.');
+      createInfoComment('Testing CodePipeline in AWS is now triggered. If successful, your PR will be merged in a while.', pr.data.number);
     } else {
       // Pull request is not suitable for merging, because one or many reasons. Lets create comments with the reason(s)
       if (merged) {
-        createInfoComment('Ooops, you are ahead of yourself. This PR is already merged.');
+        createInfoComment('Ooops, you are ahead of yourself. This PR is already merged.', pr.data.number);
       }
       if (mergeable_state === 'behind') {
-        createInfoComment('This branch is out-of-date with the base branch. Merge the latest changes from master into this branch before requesting a merge.');
+        createInfoComment('This branch is out-of-date with the base branch. Merge the latest changes from master into this branch before requesting a merge.', pr.data.number);
       }
       if (mergeable_state === 'dirty') {
-        createInfoComment('There are conflicts you need to resolve before requesting a merge.');
+        createInfoComment('There are conflicts you need to resolve before requesting a merge.', pr.data.number);
       }
       if (state !== 'OPEN') {
-        createInfoComment('This PR is NOT in OPEN state, which is required to be able to merge.');
+        createInfoComment('This PR is NOT in OPEN state, which is required to be able to merge.', pr.data.number);
       }
       if (reviewDecision !== 'APPROVED') {
-        createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.');
+        createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.', pr.data.number);
       }
       if (prStatus === 'FAILURE') {
-        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch');
+        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch', pr.data.number);
       }
     }
   });
 }
 
 
-async function createInfoComment(commentText) {
+async function createInfoComment(commentText, prNumber) {
   await octokit.rest.issues.createComment({
     ...context.repo,
-    issue_number: pull_request.number,
+    issue_number: prNumber,
     body: commentText,
   });  
 }
@@ -135,7 +135,7 @@ async function updateBranchRef(commitSha) {
 
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'pending'); 
-  createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.');
+  createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
 }
 
 if (workflowAction === 'merge-it') {
