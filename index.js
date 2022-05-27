@@ -11,7 +11,7 @@ const { pull_request } = context.payload;
 
 async function triggerPipeline(pr) {
   const query = `query {
-    repository(owner: "${context.repo.owner}", name: "${context.repo.name}") {
+    repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
       pullRequest(number: ${pr.data.number}) {
         merged
         state
