@@ -4,6 +4,7 @@ const github = require('@actions/github');
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const workflowAction = core.getInput('WORKFLOW_ACTION');
 const triggerBranch = core.getInput('TRIGGER_BRANCH');
+const baseBranch = core.getInput('BASE_BRANCH');
 const octokit = github.getOctokit(GITHUB_TOKEN);
 
 const { context = {} } = github;
@@ -115,7 +116,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 async function mergePullRequest(head) {
   await octokit.rest.repos.merge({
     ...context.repo,
-    base: 'master',
+    base: baseBranch,
     head: head,
     commit_message: 'Automatically merged by GitHub Actions',
   });  

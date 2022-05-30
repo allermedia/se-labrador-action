@@ -6,8 +6,6 @@ A set of GitHub Actions (JavaScript) to trigger an AWS CodePipeline with a speci
 
 This merge flow disables the possibility to use the merge button in a pull request. The merge is instead decided by scripts.
 
-# Logic
-
 ## Triggered when a pull request is created (opened)
 
 An information comment is created - describing that manual merging is disabled. The PR is set to a pending state, which will
@@ -31,13 +29,13 @@ conditions must be met:
 If a PR must be merged right away, without running tests a special slash command `/merge-now` can be issued in the comments fields of the PR.
 Note: The above conditions must still be met to use the emergency merging command. Should only be used if really needed.
 
-# About triggering AWS CodePipeline (or any other external logic)
+## About triggering AWS CodePipeline (or any other external logic)
 
 In the settings of the GitHub workflow file a "trigger branch" is defined. This is the name of a branch where an empty commit will be made to.
 AWS will listen to push on that particular branch. The commit message will contain a message with the branch name and head SHA of the PR.
 `Branch: <Branch Name>, PR: <Head SHA of PR>`.
 
-# How AWS CodePipeline reports back
+## How AWS CodePipeline reports back
 
 If the CodePipeline which runs all tests is successful, it needs to trigger the actual merging of the PR branch into the base branch. This is done
 by adding a new state to the latest commit of the PR. Two different states can be reported back: `success` or `failure`. This can be done using
@@ -48,7 +46,7 @@ one more push to the PR branch before a new merge can be requested.
 
 ## Public repository
 
->___This is a public repository___. 
+>***This is a public repository***. 
 
 Keep any Aller specific secrets and other sensitive information away from this repository. Also, pass branch names and other
 data as variables from the workflow definitions rather than hardcoding them in the action source file. 
@@ -75,12 +73,14 @@ Note: ... should be replaced with specific branch names etc.
 Merging to master should happen through pull requests. Any pull request should have been approved by at least one person before
 merging.
 
-# Local development
+# Usage
+
+## Local development
 
 Because this GitHub action is dependent on hydration of event based payloads and a temporary GITHUB_TOKEN it is not possible to run this action in a localhost
 environment.
 
-# GitHub repository settings
+## GitHub repository settings
 
 The base branch of the repository where this action is used needs to be a protected branch with a branch protection rule like this:
 
@@ -89,7 +89,7 @@ The base branch of the repository where this action is used needs to be a protec
 - Enable *dismiss stale pull request approvals when new commits are pushed*
 - Enable *require status checks to pass before merging* (Select/search for a check with name *default* and select *any source*)
 
-# Workflow files
+## Workflow files
 
 Place the following .yml files in the .github / workflows folder in the project where the workflows should be used.
 
@@ -129,7 +129,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_ACTION: 'merge-it'
           TRIGGER_BRANCH: 'live'
-          BASE_BRANCH: 'master'
  ```
 
 ```yaml
