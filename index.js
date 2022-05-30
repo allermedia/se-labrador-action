@@ -113,7 +113,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
   })
 }
 
-async function mergePullRequest(head) {
+async function mergePullRequest(head, baseBranch) {
   await octokit.rest.repos.merge({
     ...context.repo,
     base: baseBranch,
@@ -160,11 +160,10 @@ if (workflowAction === 'merge-now') {
   const pr = getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
     createCommitStatus(pr.data.head.sha, 'success');
-    mergePullRequest(pr.data.head.ref);
+    mergePullRequest(pr.data.head.ref, baseBranch);
   });
 }
 
 if (workflowAction === 'merge-pr') {
-  createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
-  mergePullRequest(github.context.payload.branches[0].name);
+  mergePullRequest(github.context.payload.branches[0].name, baseBranch);
 }
