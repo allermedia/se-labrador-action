@@ -48,7 +48,9 @@ one more push to the PR branch before a new merge can be requested.
 
 ## Public repository
 
-___This is a public repository___. Keep any Aller specific secrets and other sensitive information away from this repository. Also, pass branch names and other
+>___This is a public repository___. 
+
+Keep any Aller specific secrets and other sensitive information away from this repository. Also, pass branch names and other
 data as variables from the workflow definitions rather than hardcoding them in the action source file. 
 
 ## Feature branches
@@ -77,6 +79,15 @@ merging.
 
 Because this GitHub action is dependent on hydration of event based payloads and a temporary GITHUB_TOKEN it is not possible to run this action in a localhost
 environment.
+
+# GitHub repository settings
+
+The base branch of the repository where this action is used needs to be a protected branch with a branch protection rule like this:
+
+- Enable *require a pull request before merging*
+- Enable *require approvals*
+- Enable *dismiss stale pull request approvals when new commits are pushed*
+- Enable *require status checks to pass before merging* (Select/search for a check with name *default* and select *any source*)
 
 # Workflow files
 
