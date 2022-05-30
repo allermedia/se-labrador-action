@@ -59,7 +59,7 @@ async function triggerPipeline(pr) {
         createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.', pr.data.number);
       }
       if (prStatus === 'FAILURE') {
-        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch', pr.data.number);
+        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch.', pr.data.number);
       }
     }
   });
@@ -136,6 +136,10 @@ async function updateBranchRef(commitSha) {
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'pending'); 
   createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
+}
+
+if (workflowAction === 'prupdate') {
+  createCommitStatus(pull_request.head.sha, 'pending'); 
 }
 
 if (workflowAction === 'merge-it') {
