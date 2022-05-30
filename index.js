@@ -9,10 +9,10 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
-async function triggerPipeline(pr) {
+async function triggerPipeline(pr, branch, currentCommit) {
   const query = `query {
     repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
-      pullRequest(number: ${pr.data.number}) {
+      pullRequest(number: ${number}) {
         merged
         state
 				mergeable
@@ -32,7 +32,7 @@ async function triggerPipeline(pr) {
   await octokit.graphql(query, context.repo)
   .then((mergingInfo) => {
     const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
-    const { mergeable_state, mergeable } = pr.data;
+    const { mergeable_state, mergeable, number, head } = pr;
     let prStatus = 'PENDING';
     if (commits?.nodes && commits?.nodes.length) {
       prStatus = commits.nodes[0]?.commit?.status?.state || 'PENDING';
@@ -40,26 +40,30 @@ async function triggerPipeline(pr) {
 
     if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
       // Pull request should be ready for merge, lets trigger the pipeline and run the tests
-      createInfoComment('Testing CodePipeline in AWS is now triggered. If successful, your PR will be merged in a while.', pr.data.number);
+      createInfoComment('Testing CodePipeline in AWS is now triggered. If successful, your PR will be merged in a while.', number);
+      createTriggerCommit(head.ref, head.sha, currentCommit.tree.sha, branch.object.sha)
+      .then((newCommit) => {
+        updateBranchRef(newCommit.data.sha);
+      });
     } else {
       // Pull request is not suitable for merging, because one or many reasons. Lets create comments with the reason(s)
       if (merged) {
-        createInfoComment('Ooops, you are ahead of yourself. This PR is already merged.', pr.data.number);
+        createInfoComment('Ooops, you are ahead of yourself. This PR is already merged.', number);
       }
       if (mergeable_state === 'behind') {
-        createInfoComment('This branch is out-of-date with the base branch. Merge the latest changes from master into this branch before requesting a merge.', pr.data.number);
+        createInfoComment('This branch is out-of-date with the base branch. Merge the latest changes from master into this branch before requesting a merge.', number);
       }
       if (mergeable_state === 'dirty') {
-        createInfoComment('There are conflicts you need to resolve before requesting a merge.', pr.data.number);
+        createInfoComment('There are conflicts you need to resolve before requesting a merge.', number);
       }
       if (state !== 'OPEN') {
-        createInfoComment('This PR is NOT in OPEN state, which is required to be able to merge.', pr.data.number);
+        createInfoComment('This PR is NOT in OPEN state, which is required to be able to merge.', number);
       }
       if (reviewDecision !== 'APPROVED') {
-        createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.', pr.data.number);
+        createInfoComment('Hey, what is going on? You need to get your PR approved before trying to merge it.', number);
       }
       if (prStatus === 'FAILURE') {
-        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch.', pr.data.number);
+        createInfoComment('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch.', number);
       }
     }
   });
@@ -138,28 +142,14 @@ if (workflowAction === 'prinit') {
   createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
 }
 
-if (workflowAction === 'prupdate') {
-  createCommitStatus(pull_request.head.sha, 'pending'); 
-}
-
 if (workflowAction === 'merge-it') {
-  //console.log(github.context.payload);
   getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
     getBranchRef(triggerBranch)
     .then((branch) => {
-      console.log(JSON.stringify(branch.data));
       getCurrentCommit(branch.data.object.sha)
       .then((currentCommit) => {
-        triggerPipeline(pr);
-       // console.log(JSON.stringify(currentCommit));
-       /*
-        createTriggerCommit(pr.data.head.ref, pr.data.head.sha, currentCommit.data.tree.sha, branch.data.object.sha)
-        .then((newCommit) => {
-          //console.log(newCommit);
-          updateBranchRef(newCommit.data.sha);
-        });
-      */
+        triggerPipeline(pr.data, branch.data, currentCommit.data);
       });
     });
   });
@@ -174,6 +164,6 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
-  //createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
+  createCommitStatus(github.context.payload.branches[0].commit.sha, 'success'); 
   mergePullRequest(github.context.payload.branches[0].name);
 }
