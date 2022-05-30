@@ -11,6 +11,7 @@ const { context = {} } = github;
 const { pull_request } = context.payload;
 
 async function triggerPipeline(pr, branch, currentCommit) {
+  const { mergeable_state, mergeable, number, head } = pr;
   const query = `query {
     repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
       pullRequest(number: ${number}) {
@@ -33,7 +34,6 @@ async function triggerPipeline(pr, branch, currentCommit) {
   await octokit.graphql(query, context.repo)
   .then((mergingInfo) => {
     const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
-    const { mergeable_state, mergeable, number, head } = pr;
     let prStatus = 'PENDING';
     if (commits?.nodes && commits?.nodes.length) {
       prStatus = commits.nodes[0]?.commit?.status?.state || 'PENDING';
