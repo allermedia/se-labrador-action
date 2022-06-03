@@ -169,7 +169,7 @@ if (workflowAction === 'merge-now') {
   const pr = getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
     const precheck = canBeMerged(pr.data);
-    if (precheck) {
+    if (precheck.mergeStatus) {
       createCommitStatus(pr.data.head.sha, 'success');
       mergePullRequest(pr.data.head.ref, baseBranch);
     } else {
