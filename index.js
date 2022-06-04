@@ -176,7 +176,7 @@ if (workflowAction === 'merge-now') {
       } else {
         if (precheck.mergeProblems.length) {
           precheck.mergeProblems.forEach((problem) => {
-            createInfoComment(problem, number);
+            createInfoComment(problem, github.context.payload.issue.number);
           });
         }
       }
