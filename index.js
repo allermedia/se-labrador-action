@@ -166,20 +166,21 @@ if (workflowAction === 'merge-it') {
 }
 
 if (workflowAction === 'merge-now') {
-  const pr = getPullRequest(github.context.payload.issue.number)
+  getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
-    const precheck = await canBeMerged(pr.data);
-    console.log(precheck);
-    if (precheck.mergeStatus) {
-      createCommitStatus(pr.data.head.sha, 'success');
-      mergePullRequest(pr.data.head.ref, baseBranch);
-    } else {
-      if (precheck.mergeProblems.length) {
-        precheck.mergeProblems.forEach(((problem) => {
-          createInfoComment(problem, number);
-        }))
+    canBeMerged(pr.data)
+    .then((precheck) => {
+      if (precheck.mergeStatus) {
+        createCommitStatus(pr.data.head.sha, 'success');
+        mergePullRequest(pr.data.head.ref, baseBranch);
+      } else {
+        if (precheck.mergeProblems.length) {
+          precheck.mergeProblems.forEach((problem) => {
+            createInfoComment(problem, number);
+          });
+        }
       }
-    }
+    });
   });
 }
 
