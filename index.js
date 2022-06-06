@@ -125,10 +125,16 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 async function mergePullRequest(head, baseBranch) {
   await octokit.rest.repos.merge({
     ...context.repo,
+    base: head,
+    head: baseBranch,
+    commit_message: 'Merged base branch into feature branch.',
+  });  
+  await octokit.rest.repos.merge({
+    ...context.repo,
     base: baseBranch,
     head: head,
     commit_message: 'Automatically merged by GitHub Actions',
-  });  
+  });
 }
 
 async function getPullRequest(prNumber) {
