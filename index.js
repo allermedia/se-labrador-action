@@ -124,14 +124,11 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 }
 
 async function mergePullRequest(head, baseBranch) {
-  await octokit.rest.repos.merge({
+  return await octokit.rest.repos.merge({
     ...context.repo,
     base: head,
     head: baseBranch,
     commit_message: 'Merged base branch into feature branch.',
-  })
-  .then((mergeResponse) =>  {
-    console.log(mergeResponse.data);
   });
   /*
   await octokit.rest.repos.merge({
@@ -184,7 +181,10 @@ if (workflowAction === 'merge-now') {
     .then((precheck) => {
       if (precheck.mergeStatus) {
         createCommitStatus(pr.data.head.sha, 'success');
-        mergePullRequest(pr.data.head.ref, baseBranch);
+        mergePullRequest(pr.data.head.ref, baseBranch)
+        .then((mergeInfo) => {
+          console.log(mergeInfo);
+        });
       } else {
         if (precheck.mergeProblems.length) {
           precheck.mergeProblems.forEach((problem) => {
