@@ -31,6 +31,7 @@ async function canBeMerged(pr) {
       }
     }
   }`;
+  // TODO: use graphql throughout!
   const mergingInfo = await octokit.graphql(query, context.repo);
   const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
   const mergeProblems = [];
@@ -86,7 +87,7 @@ async function createInfoComment(commentText, prNumber) {
     ...context.repo,
     issue_number: prNumber,
     body: commentText,
-  });  
+  });
 }
 
 async function createCommitStatus(sha, commitStatus) {
@@ -94,7 +95,7 @@ async function createCommitStatus(sha, commitStatus) {
     ...context.repo,
     sha: sha,
     state: commitStatus,
-  });  
+  });
 }
 
 async function getBranchRef(branchName) {
@@ -123,6 +124,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
   })
 }
 
+// TODO: handle conflicts in merging. ie master -> FB & FB -> master
 async function mergePullRequest(head, baseBranch) {
   return await octokit.rest.repos.merge({
     ...context.repo,
@@ -157,11 +159,12 @@ async function updateBranchRef(commitSha) {
 }
 
 if (workflowAction === 'prinit') {
-  createCommitStatus(pull_request.head.sha, 'pending'); 
+  createCommitStatus(pull_request.head.sha, 'pending');
   createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
 }
 
 if (workflowAction === 'merge-it') {
+  // TODO: Error handling
   getPullRequest(github.context.payload.issue.number)
   .then((pr) => {
     getBranchRef(triggerBranch)
@@ -197,5 +200,6 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
+  // TODO: Look up PR number
   mergePullRequest(github.context.payload.branches[0].name, baseBranch);
 }
