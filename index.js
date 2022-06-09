@@ -224,7 +224,7 @@ if (workflowAction === 'merge-now') {
 if (workflowAction === 'merge-pr') {
   console.log('Payload: ', github.context.payload);
   getPRByCommit(github.context.payload.sha).then((prs) => {
-    console.log('Associated PRs: ', prs);
+    console.log('Associated PRs: ', prs.repository.commit.associatedPullRequests);
   });
 
   // TODO: Look up PR number
