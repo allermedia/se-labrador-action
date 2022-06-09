@@ -10,7 +10,75 @@ const octokit = github.getOctokit(GITHUB_TOKEN);
 const { context = {} } = github;
 const { pull_request } = context.payload;
 
+handleFlowAction().then(r => console.log(`${workflowAction} was run!`));
+
+async function handleFlowAction() {
+  switch (workflowAction) {
+    case 'prinit':
+      try {
+        await createCommitStatus(pull_request.head.sha, 'pending');
+        await createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
+      } catch (err) {
+        console.log('Error received: ', err);
+        core.setFailed(err.message);
+      }
+      break;
+
+    case 'merge-it':
+      try {
+        const pr = await getPullRequest(github.context.payload.issue.number);
+        const branch = await getBranchRef(triggerBranch);
+        const currentCommit = await getCurrentCommit(branch.data.object.sha);
+        await triggerPipeline(pr.data, branch.data, currentCommit.data);
+      } catch (err) {
+        console.log('Error received: ', err);
+        core.setFailed(err.message);
+      }
+      break;
+
+    case 'merge-now':
+      try {
+        const pr = await getPullRequest(github.context.payload.issue.number);
+        const precheck = await canBeMerged(pr.data);
+        if (precheck.mergeStatus) {
+          await createCommitStatus(pr.data.head.sha, 'success');
+          const mergeInfo = await mergePullRequest(pr.data.head.ref, baseBranch);
+          console.log(mergeInfo);
+        } else {
+          if (precheck.mergeProblems.length) {
+            for (const problem of precheck.mergeProblems) {
+              await createInfoComment(problem, github.context.payload.issue.number);
+            }
+          }
+        }
+      } catch (err) {
+        console.log('Error received: ', err);
+        core.setFailed(err.message);
+      }
+      break;
+
+    case 'merge-pr':
+      let prNumber;
+      try {
+        const prNumber = await getPRByCommit(github.context.payload.sha);
+        if (prNumber === undefined) {
+          core.setFailed(`Pull request associated to this commit (${github.context.payload.sha}) could not be found!`);
+          break;
+        }
+        await mergePullRequest(github.context.payload.branches[0].name, baseBranch);
+      } catch (err) {
+        console.log('Error received: ', err);
+        await createInfoComment(err.message, prNumber);
+        core.setFailed(err.message);
+      }
+      break;
+    default:
+      core.setFailed(`Workflow action not supported!`);
+  }
+}
+
 async function canBeMerged(pr) {
+  let mergingInfo;
   const { mergeable_state, mergeable, number, head } = pr;
   const query = `query {
     repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
@@ -31,8 +99,14 @@ async function canBeMerged(pr) {
       }
     }
   }`;
-  // TODO: use graphql throughout!
-  const mergingInfo = await octokit.graphql(query, context.repo);
+
+  try {
+    mergingInfo = await octokit.graphql(query, context.repo);
+  } catch (err) {
+    console.log('Received error from Github Graphql query: ', err);
+    throw Error(err);
+  }
+
   const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
   const mergeProblems = [];
   let mergeStatus = false;
@@ -75,19 +149,21 @@ async function canBeMerged(pr) {
 
 async function triggerPipeline(pr, branch, currentCommit) {
   const { head } = pr;
-  createTriggerCommit(head.ref, head.sha, currentCommit.tree.sha, branch.object.sha)
-  .then((newCommit) => {
-    updateBranchRef(newCommit.data.sha);
-  });
+  const newCommit = await createTriggerCommit(head.ref, head.sha, currentCommit.tree.sha, branch.object.sha);
+  await updateBranchRef(newCommit.data.sha);
 }
 
-
 async function createInfoComment(commentText, prNumber) {
-  await octokit.rest.issues.createComment({
-    ...context.repo,
-    issue_number: prNumber,
-    body: commentText,
-  });
+  try {
+    await octokit.rest.issues.createComment({
+      ...context.repo,
+      issue_number: prNumber,
+      body: commentText,
+    });
+  } catch (err) {
+    console.log('Received error from Github rest API: ', err);
+    throw Error(err);
+  }
 }
 
 async function createCommitStatus(sha, commitStatus) {
@@ -103,6 +179,7 @@ async function getBranchRef(branchName) {
     ...context.repo,
     ref: `heads/${branchName}`,
   });
+
 }
 
 async function getCurrentCommit(sha) {
@@ -111,6 +188,7 @@ async function getCurrentCommit(sha) {
     commit_sha: sha,
   });
 }
+
 async function createTriggerCommit(branchName, prSha, tree, parents) {
   return await octokit.rest.git.createCommit({
     ...context.repo,
@@ -121,11 +199,11 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
       name: 'GitHub',
       email: 'noreply@github.com',
     },
-  })
+  });
 }
 
-// TODO: handle conflicts in merging. ie master -> FB & FB -> master
 async function mergePullRequest(head, baseBranch) {
+  console.log('Merging main -> FB into branch ...');
   await octokit.rest.repos.merge({
     ...context.repo,
     base: head,
@@ -133,13 +211,14 @@ async function mergePullRequest(head, baseBranch) {
     commit_message: 'Merged base branch into feature branch.',
   });
 
-  const resp = await octokit.rest.repos.merge({
+  console.log('Merging FB -> main into branch ...');
+  await octokit.rest.repos.merge({
     ...context.repo,
     base: baseBranch,
     head: head,
+    merge_method: 'squash',
     commit_message: 'Automatically merged by GitHub Actions',
   });
-  console.log(resp);
 }
 
 async function getPullRequest(prNumber) {
@@ -156,9 +235,10 @@ async function updateBranchRef(commitSha) {
     sha: commitSha,
     force: true,
   });
+
 }
 
-async function getPRByCommit(sha){
+async function getPRByCommit(sha) {
   const query = `query {
     repository(name: "${context.repo.repo}", owner: "${context.repo.owner}") {
       commit: object(expression: "${sha}") {
@@ -177,56 +257,5 @@ async function getPRByCommit(sha){
     }
   }`;
   const prs = await octokit.graphql(query, context.repo);
-  return prs;
-}
-
-if (workflowAction === 'prinit') {
-  createCommitStatus(pull_request.head.sha, 'pending');
-  createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
-}
-
-if (workflowAction === 'merge-it') {
-  // TODO: Error handling
-  getPullRequest(github.context.payload.issue.number)
-  .then((pr) => {
-    getBranchRef(triggerBranch)
-    .then((branch) => {
-      getCurrentCommit(branch.data.object.sha)
-      .then((currentCommit) => {
-        triggerPipeline(pr.data, branch.data, currentCommit.data);
-      });
-    });
-  });
-}
-
-if (workflowAction === 'merge-now') {
-  getPullRequest(github.context.payload.issue.number)
-  .then((pr) => {
-    canBeMerged(pr.data)
-    .then((precheck) => {
-      if (precheck.mergeStatus) {
-        createCommitStatus(pr.data.head.sha, 'success');
-        mergePullRequest(pr.data.head.ref, baseBranch)
-        .then((mergeInfo) => {
-          console.log(mergeInfo);
-        });
-      } else {
-        if (precheck.mergeProblems.length) {
-          precheck.mergeProblems.forEach((problem) => {
-            createInfoComment(problem, github.context.payload.issue.number);
-          });
-        }
-      }
-    });
-  });
-}
-
-if (workflowAction === 'merge-pr') {
-  console.log('Payload: ', github.context.payload);
-  getPRByCommit(github.context.payload.sha).then((prs) => {
-    console.log('Associated PRs: ', prs.repository.commit.associatedPullRequests);
-  });
-
-  // TODO: Look up PR number
-  mergePullRequest(github.context.payload.branches[0].name, baseBranch);
+  return prs?.respository?.commit?.associatedPullRequests?.edges?.[0]?.node?.number;
 }
