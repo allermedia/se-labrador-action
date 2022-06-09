@@ -20,6 +20,7 @@ async function handleFlowAction() {
         await createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
       } catch (err) {
         console.log('Error received: ', err);
+        await createInfoComment(err.message, pull_request.number);
         core.setFailed(err.message);
       }
       break;
@@ -32,6 +33,7 @@ async function handleFlowAction() {
         await triggerPipeline(pr.data, branch.data, currentCommit.data);
       } catch (err) {
         console.log('Error received: ', err);
+        await createInfoComment(err.message, github.context.payload.issue.number);
         core.setFailed(err.message);
       }
       break;
@@ -53,6 +55,7 @@ async function handleFlowAction() {
         }
       } catch (err) {
         console.log('Error received: ', err);
+        await createInfoComment(err.message, github.context.payload.issue.number);
         core.setFailed(err.message);
       }
       break;
@@ -239,7 +242,9 @@ async function updateBranchRef(commitSha) {
 }
 
 async function getPRByCommit(sha) {
-  const query = `query {
+  let prs;
+  try {
+    const query = `query {
     repository(name: "${context.repo.repo}", owner: "${context.repo.owner}") {
       commit: object(expression: "${sha}") {
       ... on Commit {
@@ -256,6 +261,10 @@ async function getPRByCommit(sha) {
       }
     }
   }`;
-  const prs = await octokit.graphql(query, context.repo);
+    prs = await octokit.graphql(query, context.repo);
+  } catch (err) {
+    console.log('Received error from Github Graphql query: ', err);
+  }
+  console.log('PR-lookup ', prs?.respository?.commit?.associatedPullRequests?.edges?.[0]);
   return prs?.respository?.commit?.associatedPullRequests?.edges?.[0]?.node?.number;
 }
