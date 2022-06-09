@@ -159,7 +159,7 @@ async function updateBranchRef(commitSha) {
 }
 
 async function getPRByCommit(sha){
-  const query = `query associatedPRs(${sha}, ${context.repo.repo}, ${context.repo.owner}){
+  const query = `query {
     repository(name: ${context.repo.repo}, owner: ${context.repo.owner}) {
       commit: object(expression: ${sha}) {
       ... on Commit {
