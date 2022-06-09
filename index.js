@@ -160,8 +160,8 @@ async function updateBranchRef(commitSha) {
 
 async function getPRByCommit(sha){
   const query = `query {
-    repository(name: ${context.repo.repo}, owner: ${context.repo.owner}) {
-      commit: object(expression: ${sha}) {
+    repository(name: "${context.repo.repo}", owner: "${context.repo.owner}") {
+      commit: object(expression: "${sha}") {
       ... on Commit {
           associatedPullRequests(first:5){
             edges{
