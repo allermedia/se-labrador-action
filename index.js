@@ -265,6 +265,6 @@ async function getPRByCommit(sha) {
   } catch (err) {
     console.log('Received error from Github Graphql query: ', err);
   }
-  console.log('PR-lookup ', prs?.respository?.commit?.associatedPullRequests?.edges?.[0]);
-  return prs?.respository?.commit?.associatedPullRequests?.edges?.[0]?.node?.number;
+  console.log('PR-lookup ', prs?.data?.respository?.commit?.associatedPullRequests?.edges);
+  return prs?.data?.respository?.commit?.associatedPullRequests?.edges?.[0]?.node?.number;
 }
