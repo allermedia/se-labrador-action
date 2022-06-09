@@ -132,14 +132,14 @@ async function mergePullRequest(head, baseBranch) {
     head: baseBranch,
     commit_message: 'Merged base branch into feature branch.',
   });
-  /*
-  await octokit.rest.repos.merge({
+
+  const resp = await octokit.rest.repos.merge({
     ...context.repo,
     base: baseBranch,
     head: head,
     commit_message: 'Automatically merged by GitHub Actions',
   });
-  */
+  console.log(resp);
 }
 
 async function getPullRequest(prNumber) {
