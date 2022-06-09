@@ -126,7 +126,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 
 // TODO: handle conflicts in merging. ie master -> FB & FB -> master
 async function mergePullRequest(head, baseBranch) {
-  return await octokit.rest.repos.merge({
+  await octokit.rest.repos.merge({
     ...context.repo,
     base: head,
     head: baseBranch,
