@@ -158,6 +158,28 @@ async function updateBranchRef(commitSha) {
   });
 }
 
+async function getPRByCommit(sha){
+  const query = `query associatedPRs(${sha}, ${context.repo.repo}, ${context.repo.owner}){
+    repository(name: ${context.repo.repo}, owner: ${context.repo.owner}) {
+      commit: object(expression: ${sha}) {
+      ... on Commit {
+          associatedPullRequests(first:5){
+            edges{
+              node{
+                title
+                number
+                body
+              }
+            }
+          }
+        }
+      }
+    }
+  }`;
+  const prs = await octokit.graphql(query, context.repo);
+  return prs;
+}
+
 if (workflowAction === 'prinit') {
   createCommitStatus(pull_request.head.sha, 'pending');
   createInfoComment('Manual merging is disabled. To start merging process use the slash command */merge-it* in a new comment. That will trigger testing pipeline and merging.', pull_request.number);
@@ -200,6 +222,9 @@ if (workflowAction === 'merge-now') {
 }
 
 if (workflowAction === 'merge-pr') {
+  console.log('Payload: ', github.context.payload);
+  const associatedPrs = await getPRByCommit(github.context.payload.sha);
+  console.log('Associated PRs: ', associatedPrs);
   // TODO: Look up PR number
   mergePullRequest(github.context.payload.branches[0].name, baseBranch);
 }
