@@ -228,5 +228,5 @@ if (workflowAction === 'merge-pr') {
   });
 
   // TODO: Look up PR number
-  // mergePullRequest(github.context.payload.branches[0].name, baseBranch);
+  mergePullRequest(github.context.payload.branches[0].name, baseBranch);
 }
