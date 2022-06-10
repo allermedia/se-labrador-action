@@ -216,7 +216,6 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       ...context.repo,
       base: head,
       head: baseBranch,
-      merge_method: 'squash',
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
@@ -227,6 +226,7 @@ async function mergePullRequest(head, baseBranch, prNumber) {
     await octokit.rest.pulls.merge({
       ...context.repo,
       pull_number: prNumber,
+      merge_method: 'squash',
       commit_message: 'Automatically merged by GitHub Actions',
     });
   } catch (err) {
