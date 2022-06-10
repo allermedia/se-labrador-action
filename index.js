@@ -165,7 +165,7 @@ async function createInfoComment(commentText, prNumber) {
     });
   } catch (err) {
     console.log('Received error from Github rest API: ', err);
-    throw Error(err);
+    throw new Error(err);
   }
 }
 
@@ -207,21 +207,27 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 
 async function mergePullRequest(head, baseBranch) {
   console.log('Merging main -> FB into branch ...');
-  await octokit.rest.repos.merge({
-    ...context.repo,
-    base: head,
-    head: baseBranch,
-    commit_message: 'Merged base branch into feature branch.',
-  });
+  try {
+    await octokit.rest.repos.merge({
+      ...context.repo,
+      base: head,
+      head: baseBranch,
+      commit_message: 'Merged base branch into feature branch.',
+    });
 
-  console.log('Merging FB -> main into branch ...');
-  await octokit.rest.repos.merge({
-    ...context.repo,
-    base: baseBranch,
-    head: head,
-    merge_method: 'squash',
-    commit_message: 'Automatically merged by GitHub Actions',
-  });
+    console.log('Merging FB -> main into branch ...');
+    await octokit.rest.repos.merge({
+      ...context.repo,
+      base: baseBranch,
+      head: head,
+      commit_message: 'Automatically merged by GitHub Actions',
+    });
+  } catch (err) {
+    if (err.status === 409) {
+      throw new Error('There are merge conflicts between main & FB');
+    }
+    throw new Error(err);
+  }
 }
 
 async function getPullRequest(prNumber) {
