@@ -40,22 +40,23 @@ async function handleFlowAction() {
 
     case 'merge-now':
       try {
-        const pr = await getPullRequest(github.context.payload.issue.number);
+        const prNumber = github.context.payload.issue.number;
+        const pr = await getPullRequest(prNumber);
         const precheck = await canBeMerged(pr.data);
         if (precheck.mergeStatus) {
           await createCommitStatus(pr.data.head.sha, 'success');
-          const mergeInfo = await mergePullRequest(pr.data.head.ref, baseBranch);
+          const mergeInfo = await mergePullRequest(pr.data.head.ref, baseBranch, prNumber);
           console.log(mergeInfo);
         } else {
           if (precheck.mergeProblems.length) {
             for (const problem of precheck.mergeProblems) {
-              await createInfoComment(problem, github.context.payload.issue.number);
+              await createInfoComment(problem, prNumber);
             }
           }
         }
       } catch (err) {
         console.log('Error received: ', err);
-        await createInfoComment(err.message, github.context.payload.issue.number);
+        await createInfoComment(err.message, prNumber);
         core.setFailed(err.message);
       }
       break;
@@ -68,7 +69,7 @@ async function handleFlowAction() {
           core.setFailed(`Pull request associated to this commit (${github.context.payload.sha}) could not be found!`);
           break;
         }
-        await mergePullRequest(github.context.payload.branches[0].name, baseBranch);
+        await mergePullRequest(github.context.payload.branches[0].name, baseBranch, prNumber);
       } catch (err) {
         console.log('Error received: ', err);
         await createInfoComment(err.message, prNumber);
