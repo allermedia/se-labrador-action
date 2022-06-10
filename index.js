@@ -13,6 +13,7 @@ const { pull_request } = context.payload;
 handleFlowAction().then(r => console.log(`${workflowAction} was run!`));
 
 async function handleFlowAction() {
+  let prNumber;
   switch (workflowAction) {
     case 'prinit':
       try {
@@ -40,7 +41,7 @@ async function handleFlowAction() {
 
     case 'merge-now':
       try {
-        const prNumber = github.context.payload.issue.number;
+        prNumber = github.context.payload.issue.number;
         const pr = await getPullRequest(prNumber);
         const precheck = await canBeMerged(pr.data);
         if (precheck.mergeStatus) {
@@ -62,7 +63,6 @@ async function handleFlowAction() {
       break;
 
     case 'merge-pr':
-      let prNumber;
       try {
         prNumber = await getPRByCommit(github.context.payload.sha);
         if (prNumber === undefined) {
@@ -108,11 +108,10 @@ async function canBeMerged(pr) {
     mergingInfo = await octokit.graphql(query, context.repo);
   } catch (err) {
     console.log('Received error from Github Graphql query: ', err);
-    throw Error(err);
+    throw new Error(err);
   }
 
   const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
-  console.log('PR status: ', JSON.stringify({ merged, state, reviewDecision, commits }));
   const mergeProblems = [];
   let mergeStatus = false;
 
@@ -121,8 +120,7 @@ async function canBeMerged(pr) {
     prStatus = commits.nodes[0]?.commit?.status?.state || 'PENDING';
   }
 
-  //if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
-  if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && prStatus !== 'FAILURE') {
+  if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
     // Pull request should be ready for merge, let's return true here
     mergeStatus = true;
   } else {
@@ -206,13 +204,12 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
     },
   });
 }
-function delay(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
-}
 
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
-  console.log('before: ', pr)
+  // TODO: remove
+  console.log('before: ', pr);
+
   console.log(`Merging ${baseBranch} into ${head}.`);
   try {
     await octokit.rest.repos.merge({
@@ -222,11 +219,13 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    await delay(5000);
-
+    // Allow Github enough to complete the merge operation so that we get correct info regarding PR in upcoming API calls.
+    await new Promise(r => setTimeout(r, 5000));
     pr = await getPullRequest(prNumber);
-    console.log('after: ', pr)
+    // TODO: remove
+    console.log('after: ', pr);
 
+    // The default checks will fail if the final commit on PR does not have status as 'success'
     await createCommitStatus(pr.data.head.sha, 'success');
 
     console.log(`Merging pull request #${prNumber}`);
