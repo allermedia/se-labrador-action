@@ -55,8 +55,7 @@ async function handleFlowAction() {
         const pr = await getPullRequest(prNumber);
         const preCheck = await canBeMerged(pr.data);
         if (preCheck.mergeStatus) {
-          const mergeInfo = await mergePullRequest(pr.data.head.ref, baseBranch, prNumber);
-          console.log(mergeInfo);
+          await mergePullRequest(pr.data.head.ref, baseBranch, prNumber);
         } else {
           if (preCheck.mergeProblems.length) {
             for (const problem of preCheck.mergeProblems) {
@@ -151,7 +150,7 @@ async function canBeMerged(pr) {
       mergeProblems.push('Hey, what is going on? You need to get your PR approved before trying to merge it.');
     }
     if (prStatus === 'FAILURE') {
-      mergeProblems.push('This PR is in FAILURE state. Before requesting a new merge you need to do atleast one push to your branch.');
+      mergeProblems.push('This PR is in FAILURE state. Before requesting a new merge you need to do at least one push to your branch.');
     }
   }
   return {
@@ -254,7 +253,7 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       throw new Error(`Github reported that ${head} branch does not exist!`);
     }
     if (err.status === 409) {
-      throw new Error(`We could not merge ${head} into ${baseBranch}. Check if your branch is upto date and has no conflicts with ${baseBranch}!`);
+      throw new Error(`We could not merge ${head} into ${baseBranch}. Check if your branch is upto date and has no conflicts with ${baseBranch} and try again!`);
     }
     throw new Error(err);
   }
