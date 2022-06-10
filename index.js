@@ -216,7 +216,7 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    console.log(`Merging pull request #${prNumber}`, ...context.repo);
+    console.log(`Merging pull request #${prNumber}`, context.repo);
     await octokit.rest.pulls.merge({
       ...context.repo,
       pull_number: prNumber,
