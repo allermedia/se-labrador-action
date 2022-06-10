@@ -112,6 +112,7 @@ async function canBeMerged(pr) {
   }
 
   const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
+  console.log('PR status: ', JSON.stringify({ merged, state, reviewDecision, commits }));
   const mergeProblems = [];
   let mergeStatus = false;
 
@@ -207,6 +208,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 }
 
 async function mergePullRequest(head, baseBranch, prNumber) {
+  await canBeMerged(prNumber);
   console.log(`Merging ${baseBranch} into ${head}.`);
   try {
     await octokit.rest.repos.merge({
@@ -217,7 +219,9 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    console.log(`Merging pull request #${prNumber}`, context.repo);
+    await canBeMerged(prNumber);
+
+    console.log(`Merging pull request #${prNumber}`);
     await octokit.rest.pulls.merge({
       ...context.repo,
       pull_number: prNumber,
