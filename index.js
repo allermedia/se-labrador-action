@@ -206,6 +206,9 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
     },
   });
 }
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
@@ -218,6 +221,8 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       head: baseBranch,
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
+
+    await delay(10000);
 
     pr = await getPullRequest(prNumber);
     console.log('after: ', pr)
