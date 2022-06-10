@@ -222,7 +222,7 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    // await delay(10000);
+    await delay(5000);
 
     pr = await getPullRequest(prNumber);
     console.log('after: ', pr)
