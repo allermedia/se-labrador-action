@@ -209,7 +209,7 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
-  await canBeMerged(pr.data);
+  console.log('before: ', pr)
   console.log(`Merging ${baseBranch} into ${head}.`);
   try {
     await octokit.rest.repos.merge({
@@ -220,7 +220,7 @@ async function mergePullRequest(head, baseBranch, prNumber) {
     });
 
     pr = await getPullRequest(prNumber);
-    await canBeMerged(pr.data);
+    console.log('after: ', pr)
 
     console.log(`Merging pull request #${prNumber}`);
     await octokit.rest.pulls.merge({
