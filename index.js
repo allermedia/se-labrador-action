@@ -205,21 +205,21 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
   });
 }
 
-async function mergePullRequest(head, baseBranch) {
+async function mergePullRequest(head, baseBranch, prNumber) {
   console.log(`Merging ${baseBranch} into ${head}.`);
   try {
     await octokit.rest.repos.merge({
       ...context.repo,
       base: head,
       head: baseBranch,
+      merge_method: 'squash',
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    console.log(`Merging ${head} into ${baseBranch}.`);
-    await octokit.rest.repos.merge({
+    console.log(`Merging pull request #${prNumber}`, ...context.repo);
+    await octokit.rest.pulls.merge({
       ...context.repo,
-      base: baseBranch,
-      head: head,
+      pull_number: prNumber,
       commit_message: 'Automatically merged by GitHub Actions',
     });
   } catch (err) {
