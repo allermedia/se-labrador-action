@@ -26,7 +26,7 @@ async function handleFlowAction() {
       }
       break;
 
-    case 'merge-it':
+    case 'merge-now':
       try {
         const pr = await getPullRequest(github.context.payload.issue.number);
         const branch = await getBranchRef(triggerBranch);
@@ -39,7 +39,7 @@ async function handleFlowAction() {
       }
       break;
 
-    case 'merge-now':
+    case 'merge-it':
       try {
         prNumber = github.context.payload.issue.number;
         const pr = await getPullRequest(prNumber);
