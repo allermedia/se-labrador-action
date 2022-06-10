@@ -63,7 +63,7 @@ async function handleFlowAction() {
     case 'merge-pr':
       let prNumber;
       try {
-        const prNumber = await getPRByCommit(github.context.payload.sha);
+        prNumber = await getPRByCommit(github.context.payload.sha);
         if (prNumber === undefined) {
           core.setFailed(`Pull request associated to this commit (${github.context.payload.sha}) could not be found!`);
           break;
