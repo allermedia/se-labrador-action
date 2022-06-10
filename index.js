@@ -206,16 +206,16 @@ async function createTriggerCommit(branchName, prSha, tree, parents) {
 }
 
 async function mergePullRequest(head, baseBranch) {
-  console.log('Merging main -> FB into branch ...');
+  console.log(`Merging ${baseBranch} into ${head}.`);
   try {
     await octokit.rest.repos.merge({
       ...context.repo,
       base: head,
       head: baseBranch,
-      commit_message: 'Merged base branch into feature branch.',
+      commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    console.log('Merging FB -> main into branch ...');
+    console.log(`Merging ${head} into ${baseBranch}.`);
     await octokit.rest.repos.merge({
       ...context.repo,
       base: baseBranch,
@@ -223,8 +223,15 @@ async function mergePullRequest(head, baseBranch) {
       commit_message: 'Automatically merged by GitHub Actions',
     });
   } catch (err) {
+    console.log(err);
+    if (err.status === 204) {
+      throw new Error(`${head} has already been merged!`);
+    }
+    if (err.status === 404) {
+      throw new Error(`Github reported that ${head} branch does not exist!`);
+    }
     if (err.status === 409) {
-      throw new Error('There are merge conflicts between main & FB');
+      throw new Error(`We could not merge ${head} into ${baseBranch}. Check if your branch is upto date and has no conflicts with ${baseBranch}!`);
     }
     throw new Error(err);
   }
