@@ -222,10 +222,12 @@ async function mergePullRequest(head, baseBranch, prNumber) {
       commit_message: `Merged ${baseBranch} into ${head}.`,
     });
 
-    await delay(10000);
+    // await delay(10000);
 
     pr = await getPullRequest(prNumber);
     console.log('after: ', pr)
+
+    await createCommitStatus(pr.data.head.sha, 'success');
 
     console.log(`Merging pull request #${prNumber}`);
     await octokit.rest.pulls.merge({
