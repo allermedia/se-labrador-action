@@ -164,7 +164,7 @@ async function createInfoComment(commentText, prNumber) {
       body: commentText,
     });
   } catch (err) {
-    console.log('Received error from Github rest API: ', err);
+    console.log('Received error from Github rest API: ', err, `PR number: ${prNumber}`);
     throw new Error(err);
   }
 }
