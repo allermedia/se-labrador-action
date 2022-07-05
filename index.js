@@ -34,7 +34,7 @@ async function handleFlowAction() {
         if (preCheck.mergeStatus) {
           const branch = await getBranchRef(triggerBranch);
           const currentCommit = await getCurrentCommit(branch.data.object.sha);
-          await triggerPipeline(pr.data, branch.data, currentCommit.data);
+          // await triggerPipeline(pr.data, branch.data, currentCommit.data);
           // Add to release queue
           const payload = {
             owner: context.repo.owner,
