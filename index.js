@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
+const axios = require('axios');
 
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const workflowAction = core.getInput('WORKFLOW_ACTION');
@@ -54,12 +55,7 @@ async function handleFlowAction() {
             },
           };
 
-          await fetch('https://se-labrador-live-queue.labrador.allermedia.io/', {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          });
+          await axios.post('https://se-labrador-live-queue.labrador.allermedia.io/', payload);
 
         } else {
           if (preCheck.mergeProblems.length) {

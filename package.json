@@ -19,6 +19,7 @@
   "homepage": "https://github.com/allermedia/se-labrador-action#readme",
   "dependencies": {
     "@actions/core": "^1.8.0",
-    "@actions/github": "^5.0.1"
+    "@actions/github": "^5.0.1",
+    "axios": "^0.27.2"
   }
 }
