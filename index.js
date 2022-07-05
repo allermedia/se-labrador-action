@@ -35,6 +35,32 @@ async function handleFlowAction() {
           const branch = await getBranchRef(triggerBranch);
           const currentCommit = await getCurrentCommit(branch.data.object.sha);
           await triggerPipeline(pr.data, branch.data, currentCommit.data);
+          // Add to release queue
+          const payload = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pr: {
+              head: {
+                ref: pr.data.head.ref,
+                sha: pr.data.head.sha
+              },
+            },
+            branch: {
+              ref: branch.data.ref,
+              object: {
+                sha: branch.data.object.sha,
+              },
+              currentCommitSha: currentCommit.data.tree.sha
+            },
+          };
+
+          await fetch('https://se-labrador-live-queue.labrador.allermedia.io/', {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+
         } else {
           if (preCheck.mergeProblems.length) {
             for (const problem of preCheck.mergeProblems) {
