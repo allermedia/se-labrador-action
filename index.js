@@ -35,7 +35,7 @@ async function handleFlowAction() {
         if (preCheck.mergeStatus) {
           const branch = await getBranchRef(triggerBranch);
           const currentCommit = await getCurrentCommit(branch.data.object.sha);
-          // await triggerPipeline(pr.data, branch.data, currentCommit.data);
+
           // Add to release queue
           const payload = {
             owner: context.repo.owner,
@@ -181,12 +181,6 @@ async function canBeMerged(pr) {
   };
 }
 
-async function triggerPipeline(pr, branch, currentCommit) {
-  const { head } = pr;
-  const newCommit = await createTriggerCommit(head.ref, head.sha, currentCommit.tree.sha, branch.object.sha);
-  await updateBranchRef(newCommit.data.sha);
-}
-
 async function createInfoComment(commentText, prNumber) {
   try {
     await octokit.rest.issues.createComment({
@@ -223,23 +217,8 @@ async function getCurrentCommit(sha) {
   });
 }
 
-async function createTriggerCommit(branchName, prSha, tree, parents) {
-  return await octokit.rest.git.createCommit({
-    ...context.repo,
-    message: `Branch: ${branchName}, PR: ${prSha}`,
-    tree: tree,
-    parents: [parents],
-    author: {
-      name: 'GitHub',
-      email: 'noreply@github.com',
-    },
-  });
-}
-
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
-  // TODO: remove
-  console.log('before: ', pr);
 
   console.log(`Merging ${baseBranch} into ${head}.`);
   try {
@@ -253,8 +232,6 @@ async function mergePullRequest(head, baseBranch, prNumber) {
     // Allow Github enough to complete the merge operation so that we get correct info regarding PR in upcoming API calls.
     await new Promise(r => setTimeout(r, 5000));
     pr = await getPullRequest(prNumber);
-    // TODO: remove
-    console.log('after: ', pr);
 
     // The default checks will fail if the final commit on PR does not have status as 'success'
     await createCommitStatus(pr.data.head.sha, 'success');
@@ -286,16 +263,6 @@ async function getPullRequest(prNumber) {
     ...context.repo,
     pull_number: prNumber,
   });
-}
-
-async function updateBranchRef(commitSha) {
-  await octokit.rest.git.updateRef({
-    ...context.repo,
-    ref: `heads/${triggerBranch}`,
-    sha: commitSha,
-    force: true,
-  });
-
 }
 
 async function getPRByCommit(sha) {
