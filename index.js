@@ -99,7 +99,17 @@ async function handleFlowAction() {
           core.setFailed(`Pull request associated to this commit (${github.context.payload.sha}) could not be found!`);
           break;
         }
-        await mergePullRequest(github.context.payload.branches[0].name, baseBranch, prNumber);
+        const pr = await getPullRequest(prNumber);
+        const preCheck = await canBeMerged(pr.data);
+        if (preCheck.mergeStatus) {
+          await mergePullRequest(github.context.payload.branches[0].name, baseBranch, prNumber);
+        } else {
+          if (preCheck.mergeProblems.length) {
+            for (const problem of preCheck.mergeProblems) {
+              await createInfoComment(problem, prNumber);
+            }
+          }
+        }
       } catch (err) {
         console.log('Error received: ', err);
         await createInfoComment(err.message, prNumber);
