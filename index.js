@@ -220,14 +220,15 @@ async function getCurrentCommit(sha) {
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
 
-  console.log(`Merging ${baseBranch} into ${head}.`);
   try {
-    await octokit.rest.repos.merge({
-      ...context.repo,
-      base: head,
-      head: baseBranch,
-      commit_message: `Merged ${baseBranch} into ${head}.`,
-    });
+    // commenting out as it allows for merging branches not tested with latest master
+    // console.log(`Merging ${baseBranch} into ${head}.`);
+    // await octokit.rest.repos.merge({
+    //   ...context.repo,
+    //   base: head,
+    //   head: baseBranch,
+    //   commit_message: `Merged ${baseBranch} into ${head}.`,
+    // });
 
     // Allow Github enough to complete the merge operation so that we get correct info regarding PR in upcoming API calls.
     await new Promise(r => setTimeout(r, 5000));
