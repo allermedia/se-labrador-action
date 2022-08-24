@@ -163,7 +163,7 @@ async function canBeMerged(pr) {
   }
 
   // if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
-  if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && prStatus !== 'FAILURE') {
+  if (!merged && mergeable && (mergeable_state === 'blocked' || mergeable_state === 'clean') && state === 'OPEN' && prStatus !== 'FAILURE') {
     // Pull request should be ready for merge, let's return true here
     mergeStatus = true;
   } else {
