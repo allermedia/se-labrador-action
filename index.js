@@ -100,6 +100,7 @@ async function handleFlowAction() {
           break;
         }
         const pr = await getPullRequest(prNumber);
+        console.log('PR: ', pr);
         const preCheck = await canBeMerged(pr.data);
         if (preCheck.mergeStatus) {
           await mergePullRequest(github.context.payload.branches[0].name, baseBranch, prNumber);
@@ -151,6 +152,7 @@ async function canBeMerged(pr) {
     throw new Error(err);
   }
 
+  console.log('Merge INFO', mergingInfo.repository.pullRequest);
   const { merged, state, reviewDecision, commits } = mergingInfo.repository.pullRequest;
   const mergeProblems = [];
   let mergeStatus = false;
