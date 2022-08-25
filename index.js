@@ -33,26 +33,14 @@ async function handleFlowAction() {
         const pr = await getPullRequest(github.context.payload.issue.number);
         const preCheck = await canBeMerged(pr.data);
         if (preCheck.mergeStatus) {
-          const branch = await getBranchRef(triggerBranch);
-          const currentCommit = await getCurrentCommit(branch.data.object.sha);
 
           // Add to release queue
           const payload = {
             owner: context.repo.owner,
             repo: context.repo.repo,
-            pr: {
-              head: {
-                ref: pr.data.head.ref,
-                sha: pr.data.head.sha
-              },
-            },
-            branch: {
-              ref: branch.data.ref,
-              object: {
-                sha: branch.data.object.sha,
-              },
-              currentCommitSha: currentCommit.data.tree.sha
-            },
+            pr: prNumber,
+            testBranch: triggerBranch,
+            baseBranch: baseBranch,
           };
 
           await axios.post('https://se-labrador-live-queue.labrador.allermedia.io/', payload);
@@ -214,38 +202,10 @@ async function createCommitStatus(sha, commitStatus) {
   });
 }
 
-async function getBranchRef(branchName) {
-  return await octokit.rest.git.getRef({
-    ...context.repo,
-    ref: `heads/${branchName}`,
-  });
-
-}
-
-async function getCurrentCommit(sha) {
-  return await octokit.rest.git.getCommit({
-    ...context.repo,
-    commit_sha: sha,
-  });
-}
-
 async function mergePullRequest(head, baseBranch, prNumber) {
   let pr = await getPullRequest(prNumber);
 
   try {
-    // commenting out as it allows for merging branches not tested with latest master
-    // console.log(`Merging ${baseBranch} into ${head}.`);
-    // await octokit.rest.repos.merge({
-    //   ...context.repo,
-    //   base: head,
-    //   head: baseBranch,
-    //   commit_message: `Merged ${baseBranch} into ${head}.`,
-    // });
-
-    // Allow Github enough to complete the merge operation so that we get correct info regarding PR in upcoming API calls.
-    await new Promise(r => setTimeout(r, 5000));
-    pr = await getPullRequest(prNumber);
-
     // The default checks will fail if the final commit on PR does not have status as 'success'
     await createCommitStatus(pr.data.head.sha, 'success');
 
