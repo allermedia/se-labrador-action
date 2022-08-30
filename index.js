@@ -44,6 +44,7 @@ async function handleFlowAction() {
           };
 
           await axios.post('https://se-labrador-live-queue.labrador.allermedia.io/', payload);
+          await createInfoComment('We have just sent your feature branch for testing. If successful, your branch will be merged!', prNumber);
 
         } else {
           if (preCheck.mergeProblems.length) {
