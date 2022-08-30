@@ -167,9 +167,9 @@ async function canBeMerged(pr) {
     if (state !== 'OPEN') {
       mergeProblems.push('This PR is NOT in OPEN state, which is required to be able to merge.');
     }
-    // if (reviewDecision !== 'APPROVED') {
-    //   mergeProblems.push('Hey, what is going on? You need to get your PR approved before trying to merge it.');
-    // }
+    if (reviewDecision !== 'APPROVED') {
+      mergeProblems.push('Hey, what is going on? You need to get your PR approved before trying to merge it.');
+    }
     if (prStatus === 'FAILURE') {
       mergeProblems.push('This PR is in FAILURE state. Before requesting a new merge you need to do at least one push to your branch.');
     }
