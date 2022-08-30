@@ -150,8 +150,7 @@ async function canBeMerged(pr) {
     prStatus = commits.nodes[0]?.commit?.status?.state || 'PENDING';
   }
 
-  // if (!merged && mergeable && mergeable_state === 'blocked' && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
-  if (!merged && mergeable && (mergeable_state === 'blocked' || mergeable_state === 'clean') && state === 'OPEN' && prStatus !== 'FAILURE') {
+  if (!merged && mergeable && (mergeable_state === 'blocked' || mergeable_state === 'clean') && state === 'OPEN' && reviewDecision === 'APPROVED' && prStatus !== 'FAILURE') {
     // Pull request should be ready for merge, let's return true here
     mergeStatus = true;
   } else {
